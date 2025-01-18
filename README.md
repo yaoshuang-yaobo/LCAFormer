@@ -14,7 +14,7 @@ In remote sensing imagery, landslides often occur in mountainous terrain where t
     Download the change detection datasets from the following links. Place them inside your `data` folder.
 
   - [`Bijie`](http://gpcv.whu.edu.cn/data/Bijie_pages.html)
-  - [`Landslide4Sense`](https://github.com/iarai/Landslide4Sense-2022))
+  - [`Landslide4Sense`](https://github.com/iarai/Landslide4Sense-2022)
   - [`Luding`](https://doi.org/10.1109/TGRS.2023.3321716)
 
 - Crop Bijie and Luding datasets into 256x256 patches, Landslide4Sense dataset into 128x128 pathches 
