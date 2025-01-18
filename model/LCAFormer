@@ -1,0 +1,98 @@
+from torch import nn
+import torch
+from model.blocks.SSIU import *
+from model.blocks.CrossTrans import *
+from model.blocks.LCAM import *
+from model.blocks.MFFS import *
+from thop import profile
+
+class LCAFormer(nn.Module):
+    def __init__(self, nclass):
+        super(LCAFormer, self).__init__()
+        self.nclass = nclass
+        self.in_channels = [48, 96, 192, 384]
+        self.dilation1 = 2
+        self.dilation2 = 4
+        self.dilation3 = 8
+
+        self.stage1 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=self.in_channels[0], kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(self.in_channels[0]),
+            SSIU(self.in_channels[0], self.dilation1)
+        )
+
+        self.stage2 = nn.Sequential(
+            nn.Conv2d(in_channels=self.in_channels[0], out_channels=self.in_channels[1], kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(self.in_channels[1]),
+            SSIU(self.in_channels[1], self.dilation2)
+        )
+
+        self.stage3 = nn.Sequential(
+            nn.Conv2d(in_channels=self.in_channels[1], out_channels=self.in_channels[2], kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(self.in_channels[2]),
+            SSIU(self.in_channels[2], self.dilation3)
+        )
+
+        self.stage4 = nn.Sequential(
+            nn.Conv2d(in_channels=self.in_channels[2], out_channels=self.in_channels[3], kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(self.in_channels[3]),
+            CrossTrans(self.in_channels[3])
+        )
+
+
+        self.LCAM1 = LCAM(dim=self.in_channels[0])
+        self.LCAM2 = LCAM(dim=self.in_channels[1])
+        self.LCAM3 = LCAM(dim=self.in_channels[2])
+        self.LCAM4 = LCAM(dim=self.in_channels[3])
+
+        self.MFFS1 = MFFS(self.in_channels[0], self.in_channels[1])
+        self.MFFS2 = MFFS(self.in_channels[1], self.in_channels[2])
+        self.MFFS3 = MFFS(self.in_channels[2], self.in_channels[3])
+
+        self.up = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
+            nn.Conv2d(self.in_channels[0], self.nclass, kernel_size=1),
+            nn.BatchNorm2d(self.nclass),
+            nn.ReLU(inplace=True)
+        )
+
+        self.fake = nn.Sequential(
+            nn.Conv2d(self.nclass, 64, kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+
+            nn.Conv2d(64, self.in_channels[0], kernel_size=1),
+            nn.BatchNorm2d(self.in_channels[0]),
+            nn.ReLU(inplace=True),
+
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
+            nn.Conv2d(self.in_channels[0], 3, kernel_size=1),
+            nn.BatchNorm2d(3),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        stage1 = self.stage1(x)
+        stage2 = self.stage2(stage1)
+        stage3 = self.stage3(stage2)
+        stage4 = self.stage4(stage3)
+
+
+        stage1 = self.LCAM1(stage1)
+        stage2 = self.LCAM2(stage2)
+        stage3 = self.LCAM3(stage3)
+        stage4 = self.LCAM4(stage4)
+
+        fusion3 = self.MFFS3(stage3, stage4)
+        fusion2 = self.MFFS2(stage2, fusion3)
+        fusion = self.MFFS1(stage1, fusion2)
+
+        final = self.up(fusion)
+
+        fake = self.fake(final)
+
+
+        outputs = []
+
+        outputs.append(final)
+        return outputs, fake
