@@ -1,12 +1,3 @@
-"""
-train.py 有以下操作
-1.加载数据集（图片，标签，还有一些框的信息）
-    建立一个类，类中定义读取
-2.网络，比如vgg16
-3. 设置训练的优化器等参数
-3.设置权重保存路径
-4.设置tensorboard保存路径
-"""
 import os
 import time
 import torch
@@ -27,7 +18,7 @@ import torch.utils.data as data
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Semantic Segmentation Training With Pytorch')
-    parser.add_argument('--model', type=str, default='LCAFormer_CAGF',
+    parser.add_argument('--model', type=str, default='LCAFormer',
                     help='model name (default: fcn32s)')
     parser.add_argument('--dataset', type=str, default='landslide4Sense',
                     choices=['bijie', 'landslide4Sense', 'luding'],
@@ -67,7 +58,7 @@ class Trainer(object):
 
         # create network
         self.model = get_segmentation_Model(name=args.model, nclass=cfg.TRAIN.CLASSES).to(self.device)
-        # 需要的时候接着训练
+        # Keep training when you need to
         if cfg.TRAIN.RESUME:
             pth_filename = '{}_{}.pth'.format(args.model, args.dataset)
             resume_path = os.path.join(cfg.DATA.WEIGHTS_PATH, pth_filename)
