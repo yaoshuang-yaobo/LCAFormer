@@ -47,4 +47,3 @@ In remote sensing imagery, landslides often occur in mountainous terrain where t
     <img src="Figs/Figure3.png"/> <br />
    Heatmap visualization for various attention mechanism.
 </p>
-
