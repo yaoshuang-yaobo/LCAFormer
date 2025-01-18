@@ -36,3 +36,15 @@ In remote sensing imagery, landslides often occur in mountainous terrain where t
    - `train.py`
    - `test.py`
    - `evalution.py`
+   - 
+### 3. Change Detection Results
+<p align="center">
+    <img src="Figs/Figure2.png"/> <br />
+    Visualization results of LCAFormer with other models on the Bijie datasets.
+</p>
+
+<p align="center">
+    <img src="Figs/Figure3.png"/> <br />
+   Heatmap visualization for various attention mechanism.
+</p>
+
