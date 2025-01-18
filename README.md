@@ -13,7 +13,7 @@ In remote sensing imagery, landslides often occur in mountainous terrain where t
   - [`Landslide4Sense`](https://github.com/iarai/Landslide4Sense-2022))
   - [`Luding`](https://doi.org/10.1109/TGRS.2023.3321716)
 
-- Crop all datasets into 256x256 patches.
+- Crop Bijie and Luding datasets into 256x256 patches, Landslide4Sense dataset into 128x128 pathches 
 
 #### 2.2 Setting up conda environment
 + Prerequisites for Python:
@@ -32,6 +32,3 @@ In remote sensing imagery, landslides often occur in mountainous terrain where t
    - `train.py`
    - `test.py`
    - `evalution.py`
-
-
-
