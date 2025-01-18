@@ -73,9 +73,8 @@ def Evaluation(test_label_dir,pred_dir,name_index_map,n_classes):
         if i > 0 and i % 10 == 0:
             mIOU, PA, F1, Precision, Recall, Dice, Kappa = evaluation(hist, n_classes)
             print('{}'.format(str(round(np.nanmean(Recall), 4))))
-            #print('第{:d}步  mIOU：{}  PA：{}  F1：{} '.format(i, mIOU, PA, F1))
     mIoUs, PA , F1, Precision, Recall, Dice, Kappa = evaluation(hist, n_classes)  # mIoU values for all validation set images
-    for ind_class in range(n_classes):  
+    for ind_class in range(n_classes):
         print('===>' + name_index_map[ind_class] + ':\t' + str(round(mIoUs[ind_class] * 100, 2)))
     print('===> mIoU: ' + str(round(np.nanmean(mIoUs) * 100, 2)))
     print('===> PA: {}'.format(PA))
