@@ -3,19 +3,13 @@ import cv2
 import os
 from sklearn.metrics import cohen_kappa_score
 
-def fast_hist(a, b, n):  # a是转化成一维数组的标签，形状(H×W,)；b是转化成一维数组的标签，形状(H×W,)；n是类别数目，实数（在这里为19）
-    '''
-	核心代码
-	'''
-    k = (a >= 0) & (a < n)  # k是一个一维bool数组，形状(H×W,)；目的是找出标签中需要计算的类别（去掉了背景） k=0或1
-    return np.bincount(n * a[k].astype(int) + b[k], minlength=n ** 2).reshape(n,
-                                                                              n)  # np.bincount计算了从0到n**2-1这n**2个数中每个数出现的次数，返回值形状(n, n)
 
-def evaluation(hist, n_classes):  # 分别为每个类别（在这里是19类）计算mIoU，hist的形状(n, n)
-    '''
-	核心代码
-	'''
+def fast_hist(a, b, n):
+    k = (a >= 0) & (a < n)
+    return np.bincount(n * a[k].astype(int) + b[k], minlength=n ** 2).reshape(n,n)
 
+
+def evaluation(hist, n_classes):  # mIoU
     TP = np.diag(hist)
     FP = hist.sum(0) - TP
     FN = hist.sum(1) - TP
@@ -38,30 +32,26 @@ def evaluation(hist, n_classes):  # 分别为每个类别（在这里是19类）
     po = sum_po / n
     pe = sum_pe / (n * n)
     Kappa = (po - pe) / (1 - pe)
-    return mIOU, PA, mF1, Precision, Recall, Dice, Kappa # 矩阵的对角线上的值组成的一维数组/矩阵的所有元素之和，返回值形状(n,)
+    return mIOU, PA, mF1, Precision, Recall, Dice, Kappa
 
 
 def SegColor2Label(img):
     """
     img: Shape [h, w, 3]
     mapMatrix: color-> label mapping matrix,
-               覆盖了Uint8 RGB空间所有256x256x256种颜色对应的label
 
-    return: labelMatrix: Shape [h, w], 像素值即类别标签
+    return: labelMatrix: Shape [h, w]
     """
     VOC_COLORMAP = [[255, 255, 255], [0, 0, 0], ]
-    #背景 [255, 0, 0] 红色
-    # 小车[255,255,0]黄色
-    # 防渗面[255, 255, 255]白色
-    # 树 [0, 255, 0]绿色
-    # 低植被[0,255, 255]青色
-    # 建筑物[0, 0, 255]蓝色
+    # Landslides : [255, 255, 255] white
+    # Background : [0, 0, 0] black
     mapMatrix = np.zeros(256 * 256 * 256, dtype=np.int32)
     for i, cm in enumerate(VOC_COLORMAP):
         mapMatrix[cm[2] * 65536 + cm[1] * 256 + cm[0]] = i
 
     indices = img[:, :, 0] * 65536 + img[:, :, 1] * 256 + img[:, :, 2]
     return mapMatrix[indices]
+
 
 def Evaluation(test_label_dir,pred_dir,name_index_map,n_classes):
 
@@ -72,7 +62,7 @@ def Evaluation(test_label_dir,pred_dir,name_index_map,n_classes):
         label = SegColor2Label(label)
         pred = cv2.imread(os.path.join(pred_dir,label_path_list))
         pred = SegColor2Label(pred)
-        if len(label.flatten()) != len(pred.flatten()):  # 如果图像分割结果与标签的大小不一样，这张图片就不计算
+        if len(label.flatten()) != len(pred.flatten()):
             print('Skipping: len(gt) = {:d}, len(pred) = {:d}, {:s}, {:s}'.format(len(label.flatten()),
                                                                                   len(pred.flatten()),
                                                                                   os.path.join(test_label_dir,label_path_list),
@@ -80,14 +70,14 @@ def Evaluation(test_label_dir,pred_dir,name_index_map,n_classes):
             continue
 
         hist += fast_hist(label.flatten(), pred.flatten(), n_classes)
-        if i > 0 and i % 10 == 0:  # 每计算10张就输出一下目前已计算的图片中所有类别平均的mIoU值
+        if i > 0 and i % 10 == 0:
             mIOU, PA, F1, Precision, Recall, Dice, Kappa = evaluation(hist, n_classes)
             print('{}'.format(str(round(np.nanmean(Recall), 4))))
             #print('第{:d}步  mIOU：{}  PA：{}  F1：{} '.format(i, mIOU, PA, F1))
-    mIoUs, PA , F1, Precision, Recall, Dice, Kappa = evaluation(hist, n_classes)  # 计算所有验证集图片的逐类别mIoU值
-    for ind_class in range(n_classes):  # 逐类别输出一下mIoU值
+    mIoUs, PA , F1, Precision, Recall, Dice, Kappa = evaluation(hist, n_classes)  # mIoU values for all validation set images
+    for ind_class in range(n_classes):  
         print('===>' + name_index_map[ind_class] + ':\t' + str(round(mIoUs[ind_class] * 100, 2)))
-    print('===> mIoU: ' + str(round(np.nanmean(mIoUs) * 100, 2)))  # 在所有验证集图像上求所有类别平均的mIoU值，计算时忽略NaN值
+    print('===> mIoU: ' + str(round(np.nanmean(mIoUs) * 100, 2)))
     print('===> PA: {}'.format(PA))
     print('===> F1: {}'.format(F1))
     print('===> Precision: {}'.format(Precision))
@@ -100,9 +90,6 @@ def Evaluation(test_label_dir,pred_dir,name_index_map,n_classes):
 if __name__ == "__main__":
     test_label_dir= 'data/Landslide4Sense/test/labels/'
     pred_dir = 'Results/LCAFormer/landslide4sense/'
-    # pred_dir = 'Results/My_Net_2/pre/'
 
     name_index_map = {0: 'landslide', 1: 'background'}
-
-    # name_index_map = {0:'background' , 1:'water',2:'road',3:'vegetation',4:'construction'}
     Evaluation(test_label_dir, pred_dir, name_index_map, 2)
