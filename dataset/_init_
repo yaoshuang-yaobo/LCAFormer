@@ -1,0 +1,18 @@
+"""
+This module provides data loaders and transformers for popular vision datasets.
+"""
+from .Luding import Luding
+from .Bijie import Bijie
+from .LandslidesSense import Landslide4Sense
+# from .voc2012 import Voc2012
+
+datasets = {
+    'luding': Luding,
+    'biji': Bijie,
+    'landslide4sense': Landslide4Sense,
+}
+
+
+def get_segmentation_dataset(name, **kwargs):
+    """Segmentation Datasets"""
+    return datasets[name.lower()](**kwargs)
