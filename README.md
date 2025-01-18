@@ -33,7 +33,7 @@ In remote sensing imagery, landslides often occur in mountainous terrain where t
 #### 2.4 tran & test & evaluation
 + Train/Test:
    - `train.py`
-   - `test.py`
+   - `prediction.py`
    - `evalution.py`
 
 ### 3. Change Detection Results
