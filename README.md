@@ -30,7 +30,6 @@ In remote sensing imagery, landslides often occur in mountainous terrain where t
     git clone https://github.com/yaoshuang-yaobo/LCAFormer.git
     cd LCAFormer
     ```
-
 #### 2.4 tran & test & evaluation
 + Train/Test:
    - `train.py`
